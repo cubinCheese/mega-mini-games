@@ -19,10 +19,15 @@
     let dy = 0;
     let food = {x: 320, y: 320};
 
-    function gameLoop() {
+    let lastUpdateTime = 0;
+    const snakeSpeed = 10; // moves per second
+    const moveInterval = 1000 / snakeSpeed;
+
+    function update() {
       const head = {x: snake[0].x + dx, y: snake[0].y + dy};
       snake.unshift(head);
 
+      // Check if food eaten
       if (head.x === food.x && head.y === food.y) {
         food = {
           x: Math.floor(Math.random() * 20) * grid,
@@ -32,27 +37,52 @@
         snake.pop();
       }
 
-      if (head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400 || snake.slice(1).some(p => p.x === head.x && p.y === head.y)) {
+      // Check collisions - game boundary + self-collision
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        snake.slice(1).some(p => p.x === head.x && p.y === head.y)
+      ) {
         alert("Game Over!");
         snake = [{x: 160, y: 160}];
         dx = grid;
         dy = 0;
       }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'lime';
-      snake.forEach(p => ctx.fillRect(p.x, p.y, grid-2, grid-2));
-      ctx.fillStyle = 'red';
-      ctx.fillRect(food.x, food.y, grid-2, grid-2);
     }
 
-    setInterval(gameLoop, 100);
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'lime';
+      snake.forEach(p => ctx.fillRect(p.x, p.y, grid - 2, grid - 2));
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
+    }
+
+    function gameLoop(time = 0) {
+      requestAnimationFrame(gameLoop);
+
+      if (time - lastUpdateTime > moveInterval) {
+        update();
+        lastUpdateTime = time;
+      }
+
+      draw();
+    }
+
+    // movement keys
     document.addEventListener('keydown', e => {
-      if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
-      else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
-      else if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
-      else if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+      if (e.key === 'w' && dy === 0) {
+        dx = 0; dy = -grid;
+      } else if (e.key === 's' && dy === 0) {
+        dx = 0; dy = grid;
+      } else if (e.key === 'a' && dx === 0) {
+        dx = -grid; dy = 0;
+      } else if (e.key === 'd' && dx === 0) {
+        dx = grid; dy = 0;
+      }
     });
+
+    requestAnimationFrame(gameLoop);
   </script>
 </body>
 </html>

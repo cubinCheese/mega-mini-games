@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Game Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold text-center mb-8">🎮 Mini Game Hub</h1>
+
+  <div id="card-container" class="flex flex-wrap justify-center gap-6 max-w-[90%]"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="{{ url_for('static', filename='js/render-cards.js') }}"></script>
+</body>
+</html>
