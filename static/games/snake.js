@@ -186,10 +186,15 @@ function setupHardcodedControlButtons() {
     const down  = document.getElementById('btn-down');
     const left  = document.getElementById('btn-left');
     const right = document.getElementById('btn-right');
-    if (up)    up.addEventListener('click',    () => { if (dy === 0) { dx = 0; dy = -box; } });
-    if (down)  down.addEventListener('click',  () => { if (dy === 0) { dx = 0; dy = box; } });
-    if (left)  left.addEventListener('click',  () => { if (dx === 0) { dx = -box; dy = 0; } });
-    if (right) right.addEventListener('click', () => { if (dx === 0) { dx = box; dy = 0; } });
+    const addControl = (el, fn) => {
+        if (!el) return;
+        el.addEventListener('touchstart', function(e) { e.preventDefault(); fn(); }, {passive: false});
+        el.addEventListener('click', fn);
+    };
+    addControl(up,    () => { if (dy === 0) { dx = 0; dy = -box; } });
+    addControl(down,  () => { if (dy === 0) { dx = 0; dy = box; } });
+    addControl(left,  () => { if (dx === 0) { dx = -box; dy = 0; } });
+    addControl(right, () => { if (dx === 0) { dx = box; dy = 0; } });
 }
 
 
@@ -201,12 +206,14 @@ function init() {
     // Add restart button handler for overlay
     const restartBtn = document.getElementById('btn-restart');
     if (restartBtn) {
-        restartBtn.addEventListener('click', () => {
+        const restartFn = () => {
             if (gameOver) {
                 hideGameOverOverlay();
                 resetGame();
             }
-        });
+        };
+        restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartFn(); }, {passive: false});
+        restartBtn.addEventListener('click', restartFn);
     }
 
     // toggle snake appearance
