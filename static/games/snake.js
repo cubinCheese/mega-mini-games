@@ -16,6 +16,22 @@ let food = {x: Math.floor(Math.random() * canvas.width / box) * box, y: Math.flo
 let score = 0; // Initial score
 let gameOver = false; // Game over flag
 
+let useDuck = false; // false = lime blocks, true = duck emoji
+
+function calculateScore(currentScore) {
+  // Modified scoring system
+  if (currentScore <= 10) {
+    currentScore += 10;
+  } else if (currentScore >= 50) {
+    currentScore += 50;
+  } else if (currentScore >= 100) {
+    currentScore += 100;
+  } else {
+    currentScore += 10; // Default score increment
+  }
+  return currentScore;
+}
+
 // Update game state: snake movement, collision, food logic
 function update() {
   // TODO: Move snake, check collisions, handle food eating
@@ -25,7 +41,7 @@ function update() {
   // Check if snake eats food
   if (head.x === food.x && head.y === food.y) {
         food = placeFood(); // Place new food
-        score++;
+        score += calculateScore(score); // Update score
     } else {
     snake.pop(); // Remove the tail if not eating food
   }
@@ -41,18 +57,28 @@ function update() {
     
 }
 
+// Show overlay and toggle button after game over
 function showGameOverOverlay() {
     const overlay = document.getElementById('game-over-overlay');
     const scoreElem = document.getElementById('final-score');
+    const toggleBtn = document.getElementById('toggle-appearance');
     if (overlay && scoreElem) {
         scoreElem.textContent = `Your score: ${score}`;
         overlay.style.display = 'flex';
     }
+    if (toggleBtn) {
+        toggleBtn.style.display = 'inline-block';
+        toggleBtn.textContent = useDuck ? "Use 🟩" : "Use 🐤";
+        toggleBtn.disabled = false;
+    }
 }
 
+// Hide overlay and toggle button when restarting
 function hideGameOverOverlay() {
-    const overlay = document.getElementById('game-over-overlay');
+    const overlay = document.getElementById('game-over-overlay');   // game over overlay
+    const toggleBtn = document.getElementById('toggle-appearance'); // 🟩 or 🐤
     if (overlay) overlay.style.display = 'none';
+    if (toggleBtn) toggleBtn.style.display = 'none';
 }
 
 // Place food at a random position
@@ -67,15 +93,39 @@ function placeFood() {
     return newFood;
 }
 
+// Toggle appearance of snake handler
+function handleToggleAppearance() {
+    useDuck = !useDuck; // Toggle between duck and lime
+    const toggleBtn = document.getElementById('toggle-appearance');
+    if (toggleBtn) {
+        toggleBtn.textContent = useDuck ? "Use 🟩" : "Use 🐤";
+    }
+    draw(); // Redraw the game with the new appearance
+}
 
 // Draw everything on the canvas
 function draw() {
-  // TODO: Clear canvas, draw snake and food
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'lime';
-    snake.forEach(segment => ctx.fillRect(segment.x, segment.y, box - 2, box - 2)); 
-    ctx.fillStyle = 'red';
-    ctx.fillRect(food.x, food.y, box - 2, box - 2); // Draw food  
+
+    if (useDuck) {
+        // draw snake as duck emoji
+        ctx.font = `${box + 2}px serif`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        snake.forEach(segment => ctx.fillText('🐤', segment.x, segment.y));
+
+        // draw food as duck egg
+        ctx.fillText('🐣', food.x, food.y);
+
+      } else {
+        // draw snake as lime square
+        ctx.fillStyle = 'lime';
+        snake.forEach(segment => ctx.fillRect(segment.x, segment.y, box - 2, box - 2));
+        
+        // draw food as red square
+        ctx.fillStyle = 'red';
+        ctx.fillRect(food.x, food.y, box - 2, box - 2);
+    }
 }
 
 // Movement keys handling
@@ -104,6 +154,15 @@ function handleKeyDown(event) {
 // Initalize game
 function init() {
     document.addEventListener('keydown', handleKeyDown);
+
+    // toggle snake appearance
+    const toggleBtn = document.getElementById('toggle-appearance');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', handleToggleAppearance);
+        toggleBtn.style.display = 'none'; // Hide by default
+        toggleBtn.disabled = true;        // Disable by default
+    }
+
     draw();
     requestAnimationFrame(gameLoop);
 }
