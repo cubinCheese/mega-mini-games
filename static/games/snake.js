@@ -36,10 +36,23 @@ function update() {
         snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
     ) {
         gameOver = true;
-        alert('Game Over! Your score: ' + score + '\nPress OK to restart.');
-        resetGame();
+        showGameOverOverlay();
     } 
     
+}
+
+function showGameOverOverlay() {
+    const overlay = document.getElementById('game-over-overlay');
+    const scoreElem = document.getElementById('final-score');
+    if (overlay && scoreElem) {
+        scoreElem.textContent = `Your score: ${score}`;
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideGameOverOverlay() {
+    const overlay = document.getElementById('game-over-overlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 // Place food at a random position
@@ -69,6 +82,7 @@ function draw() {
 function handleKeyDown(event) {
     
     if (gameOver && event.code === 'Space') {
+        hideGameOverOverlay();
         resetGame();
         return;
     }
