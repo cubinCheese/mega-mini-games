@@ -180,10 +180,34 @@ function handleKeyDown(event) {
     }
 }
 
+// Touch/Click Controls
+function setupHardcodedControlButtons() {
+    const up    = document.getElementById('btn-up');
+    const down  = document.getElementById('btn-down');
+    const left  = document.getElementById('btn-left');
+    const right = document.getElementById('btn-right');
+    if (up)    up.addEventListener('click',    () => { if (dy === 0) { dx = 0; dy = -box; } });
+    if (down)  down.addEventListener('click',  () => { if (dy === 0) { dx = 0; dy = box; } });
+    if (left)  left.addEventListener('click',  () => { if (dx === 0) { dx = -box; dy = 0; } });
+    if (right) right.addEventListener('click', () => { if (dx === 0) { dx = box; dy = 0; } });
+}
+
 
 // Initalize game
 function init() {
     document.addEventListener('keydown', handleKeyDown);
+    setupHardcodedControlButtons(); 
+
+    // Add restart button handler for overlay
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', () => {
+            if (gameOver) {
+                hideGameOverOverlay();
+                resetGame();
+            }
+        });
+    }
 
     // toggle snake appearance
     const toggleBtn = document.getElementById('toggle-appearance');

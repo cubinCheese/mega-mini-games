@@ -13,7 +13,6 @@
     Use 🐤 Snake
   </button>
 
-
   <!-- Game Over Overlay -->
   <!-- Boundary box for overlay -->
   <div class="relative w-[400px] h-[400px] mx-auto mb-6">
@@ -24,7 +23,20 @@
         <h2 id="end-state-title" class="text-2xl font-bold mb-2 text-red-600"></h2>
         <p class="mb-4 text-lg" id="final-score"></p>
         <p class="mb-2 text-gray-700">Press <b>Space</b> to restart.</p>
+        <button id="btn-restart" class="w-32 h-12 bg-orange-400 rounded text-xl text-white font-bold hover:bg-orange-500 mt-2">
+          Restart
+        </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Control Buttons for Mobile/Touch -->
+  <div id="controls" class="flex flex-col items-center gap-2 my-4 select-none">
+    <button id="btn-up"    class="w-16 h-12 bg-gray-300 rounded text-2xl mb-1">&#8593;</button>
+    <div class="flex gap-2">
+      <button id="btn-left"  class="w-16 h-12 bg-gray-300 rounded text-2xl">&#8592;</button>
+      <button id="btn-down"  class="w-16 h-12 bg-gray-300 rounded text-2xl">&#8595;</button>
+      <button id="btn-right" class="w-16 h-12 bg-gray-300 rounded text-2xl">&#8594;</button>
     </div>
   </div>
 
