@@ -15,36 +15,46 @@ let dy = 0; // Initial vertical direction
 let food = {x: Math.floor(Math.random() * canvas.width / box) * box, y: Math.floor(Math.random() * canvas.height / box) * box}; // Initial food position
 let score = 0; // Initial score
 let gameOver = false; // Game over flag
-
 let useDuck = false; // false = lime blocks, true = duck emoji
+
+const totalCells = (canvas.width / box) * (canvas.height / box);
+let victoryState = false;
+
 
 function calculateScore(currentScore) {
   // Modified scoring system
-  if (currentScore <= 10) {
-    currentScore += 10;
-  } else if (currentScore >= 50) {
-    currentScore += 50;
-  } else if (currentScore >= 100) {
-    currentScore += 100;
-  } else {
-    currentScore += 10; // Default score increment
-  }
-  return currentScore;
+    if (currentScore <= 10) {
+      currentScore += 10;
+    } else if (currentScore >= 50) {
+      currentScore += 50;
+    } else if (currentScore >= 100) {
+      currentScore += 100;
+    } else {
+      currentScore += 10; // Default score increment
+    }
+    return currentScore;
 }
 
 // Update game state: snake movement, collision, food logic
 function update() {
-  // TODO: Move snake, check collisions, handle food eating
-  const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-  snake.unshift(head);
+    // Move snake, check collisions, handle food eating
+    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+    snake.unshift(head);
 
-  // Check if snake eats food
-  if (head.x === food.x && head.y === food.y) {
-        food = placeFood(); // Place new food
-        score += calculateScore(score); // Update score
-    } else {
-    snake.pop(); // Remove the tail if not eating food
-  }
+    // Check if snake eats food
+    if (head.x === food.x && head.y === food.y) {
+          food = placeFood(); // Place new food
+          score += calculateScore(score); // Update score
+      } else {
+      snake.pop(); // Remove the tail if not eating food
+    }
+    
+    // victory condition: event trigger
+    if (snake.length >= totalCells) {
+        gameOver = true;
+        showEndStateOverlay(true);
+        return;
+    }
 
     // Check for collisions with walls or self
     if (head.x < 0 || head.x >= canvas.width || 
@@ -52,20 +62,30 @@ function update() {
         snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
     ) {
         gameOver = true;
-        showGameOverOverlay();
+        showEndStateOverlay(false);
+        return;
     } 
-    
 }
 
 // Show overlay and toggle button after game over
-function showGameOverOverlay() {
+function showEndStateOverlay(victoryState) {
     const overlay = document.getElementById('game-over-overlay');
     const scoreElem = document.getElementById('final-score');
     const toggleBtn = document.getElementById('toggle-appearance');
-    if (overlay && scoreElem) {
-        scoreElem.textContent = `Your score: ${score}`;
+    const titleElem = document.getElementById('end-state-title'); // Use the id directly
+
+    if (overlay && scoreElem && titleElem) {
+        if (victoryState) {
+          titleElem.textContent = "You Win! 🎉";
+          scoreElem.textContent = `Final Score: ${score}`;
+          playConfetti();    // Trigger confetti!
+        } else {
+          titleElem.textContent = "Game Over!";
+          scoreElem.textContent = `Final Score: ${score}`;
+        }
         overlay.style.display = 'flex';
-    }
+    } 
+
     if (toggleBtn) {
         toggleBtn.style.display = 'inline-block';
         toggleBtn.textContent = useDuck ? "Use 🟩" : "Use 🐤";
@@ -79,6 +99,17 @@ function hideGameOverOverlay() {
     const toggleBtn = document.getElementById('toggle-appearance'); // 🟩 or 🐤
     if (overlay) overlay.style.display = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
+}
+
+// Plays confetti animation
+function playConfetti() {
+    if (window.confetti) {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    }
 }
 
 // Place food at a random position
@@ -130,7 +161,6 @@ function draw() {
 
 // Movement keys handling
 function handleKeyDown(event) {
-    
     if (gameOver && event.code === 'Space') {
         hideGameOverOverlay();
         resetGame();
@@ -138,16 +168,16 @@ function handleKeyDown(event) {
     }
     if (gameOver) return; // Ignore other keys if game is over
 
-  // TODO: Change snake direction based on key pressed
-  if (event.key === 'w' && dy === 0) {
-    dx = 0; dy = -box; 
-  } else if (event.key === 's' && dy === 0) {
-    dx = 0; dy = box; 
-  } else if (event.key === 'a' && dx === 0) {
-    dx = -box; dy = 0; 
-  } else if (event.key === 'd' && dx === 0) {
-    dx = box; dy = 0; 
-  }
+    // TODO: Change snake direction based on key pressed
+    if (event.key === 'w' && dy === 0) {
+      dx = 0; dy = -box; 
+    } else if (event.key === 's' && dy === 0) {
+      dx = 0; dy = box; 
+    } else if (event.key === 'a' && dx === 0) {
+      dx = -box; dy = 0; 
+    } else if (event.key === 'd' && dx === 0) {
+      dx = box; dy = 0; 
+    }
 }
 
 
@@ -191,6 +221,21 @@ function resetGame() {
     dx = box; // Reset direction to right
     dy = 0; // Reset vertical direction
 }
+
+
+// test functions
+function testVictoryState() {
+  useDuck = true;
+  snake = [];
+  score = totalCells + 1;
+  for (let y = 0; y < canvas.height; y += box) {
+      for (let x = 0; x < canvas.width; x += box) {
+          snake.push({ x, y });
+      }
+  }
+};
+
+// testVictoryState();
 
 // Start the game
 init();
