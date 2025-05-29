@@ -12,6 +12,9 @@ const moveInterval = 1000 / snakeSpeed;
 let snake = [{x: 160, y: 160}]; // Initial position of the snake
 let dx = box; // Initial direction (moving right)
 let dy = 0; // Initial vertical direction
+let nextDx = dx;
+let nextDy = dy;
+
 let food = {x: Math.floor(Math.random() * canvas.width / box) * box, y: Math.floor(Math.random() * canvas.height / box) * box}; // Initial food position
 let score = 0; // Initial score
 let gameOver = false; // Game over flag
@@ -19,6 +22,7 @@ let useDuck = false; // false = lime blocks, true = duck emoji
 
 const totalCells = (canvas.width / box) * (canvas.height / box);
 let victoryState = false;
+
 
 
 function calculateScore(currentScore) {
@@ -37,6 +41,10 @@ function calculateScore(currentScore) {
 
 // Update game state: snake movement, collision, food logic
 function update() {
+    // Update direction to the next direction
+    dx = nextDx; 
+    dy = nextDy; 
+
     // Move snake, check collisions, handle food eating
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
     snake.unshift(head);
@@ -161,7 +169,7 @@ function draw() {
 
 // Movement keys handling
 function handleKeyDown(event) {
-    if (gameOver && event.code === 'Space') {
+    if (gameOver && event.code === 'Enter') {
         hideGameOverOverlay();
         resetGame();
         return;
@@ -169,14 +177,15 @@ function handleKeyDown(event) {
     if (gameOver) return; // Ignore other keys if game is over
 
     // TODO: Change snake direction based on key pressed
+    // In handleKeyDown and addControl:
     if (event.key === 'w' && dy === 0) {
-      dx = 0; dy = -box; 
+        nextDx = 0; nextDy = -box;
     } else if (event.key === 's' && dy === 0) {
-      dx = 0; dy = box; 
+        nextDx = 0; nextDy = box;
     } else if (event.key === 'a' && dx === 0) {
-      dx = -box; dy = 0; 
+        nextDx = -box; nextDy = 0;
     } else if (event.key === 'd' && dx === 0) {
-      dx = box; dy = 0; 
+        nextDx = box; nextDy = 0;
     }
 }
 
@@ -191,10 +200,10 @@ function setupHardcodedControlButtons() {
         el.addEventListener('touchstart', function(e) { e.preventDefault(); fn(); }, {passive: false});
         el.addEventListener('click', fn);
     };
-    addControl(up,    () => { if (dy === 0) { dx = 0; dy = -box; } });
-    addControl(down,  () => { if (dy === 0) { dx = 0; dy = box; } });
-    addControl(left,  () => { if (dx === 0) { dx = -box; dy = 0; } });
-    addControl(right, () => { if (dx === 0) { dx = box; dy = 0; } });
+    addControl(up,    () => { if (dy === 0) { nextDx = 0; nextDy = -box; } });
+    addControl(down,  () => { if (dy === 0) { nextDx = 0; nextDy = box; } });
+    addControl(left,  () => { if (dx === 0) { nextDx = -box; nextDy = 0; } });
+    addControl(right, () => { if (dx === 0) { nextDx = box; nextDy = 0; } });
 }
 
 
@@ -251,6 +260,8 @@ function resetGame() {
     snake = [{x: 160, y: 160}]; // Reset snake position
     dx = box; // Reset direction to right
     dy = 0; // Reset vertical direction
+    nextDx = dx; 
+    nextDy = dy;
 }
 
 
