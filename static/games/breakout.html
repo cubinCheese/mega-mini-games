@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Breakout Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold text-center mb-6">🟦 Breakout Game</h1>
+  <div class="relative w-[440px] h-[480px] mx-auto mb-6">
+    <canvas id="game" width="440" height="480" class="bg-black rounded shadow-lg"></canvas>
+  </div>
+  <div class="flex gap-4 mt-4">
+    <button id="btn-left" class="w-20 h-12 bg-gray-300 rounded text-2xl font-bold hover:bg-gray-400">&#8592;</button>
+    <button id="btn-right" class="w-20 h-12 bg-gray-300 rounded text-2xl font-bold hover:bg-gray-400">&#8594;</button>
+  </div>
+  <script src="breakout.js"></script>
+</body>
+</html>
