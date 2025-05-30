@@ -41,18 +41,50 @@ class Ball {
         this.speed = 4;
         this.dx = this.speed;
         this.dy = -this.speed;
+        this.trail = []; // Store previous positions for the trail
+        this.maxTrail = 20; // Number of trail segments
     }
 
     update() {
+        // Add current position to the trail
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.maxTrail) {
+            this.trail.shift();
+        }
         this.x += this.dx;
         this.y += this.dy;
     }
 
     draw(ctx) {
+        // Draw the lightning-like trail
+        for (let i = 0; i < this.trail.length - 1; i++) {
+            const p1 = this.trail[i];
+            const p2 = this.trail[i + 1];
+            const alpha = (i + 1) / this.trail.length;
+            ctx.save();
+            ctx.strokeStyle = `rgba(173,216,230,${alpha * 0.7})`; // light blue, fading
+            ctx.shadowColor = `rgba(0,255,255,${alpha})`;
+            ctx.shadowBlur = 10 * alpha;
+            ctx.lineWidth = 2 + 2 * (1 - alpha);
+            ctx.beginPath();
+            // Add a little jaggedness for lightning effect
+            const midX = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 6 * (1 - alpha);
+            const midY = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 6 * (1 - alpha);
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(midX, midY);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Draw the ball
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = "#e74c3c";
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 18;
         ctx.fill();
+        ctx.shadowBlur = 0;
         ctx.closePath();
     }
 }
@@ -88,7 +120,9 @@ class Game {
         this.brickHeight = 20;
         this.initBricks();
         this.running = true;
+        this.score = 0;
     }
+
 
     // Initialize individual bricks into a grid
     initBricks() {
@@ -125,11 +159,13 @@ class Game {
             this.ball.y = this.ball.radius;
             this.ball.dy *= -1;
         }
-        // Bottom (south) boundary (ball goes behind paddle)
-        if (this.ball.y - this.ball.radius > this.canvas.height) {
-            // Ball is lost: stop the game or handle life loss
+        // Bottom (south) boundary (ball bounces off)
+        if (this.ball.y + this.ball.radius > this.canvas.height) {
+            //this.ball.y = this.canvas.height - this.ball.radius;
+            //this.ball.dy *= -1;
+
             this.running = false;
-            // Optionally, you can set a flag or call a game over function here
+            this.showEndStateOverlay(false);
         }
 
         // Paddle collision
@@ -179,6 +215,54 @@ class Game {
                 }
             }
         }
+        
+        // Extra boundary: "death zone" behind the paddle
+        const deathZoneY = this.paddle.y + this.paddle.height + 10; // 10px below paddle
+        if (this.ball.y - this.ball.radius > deathZoneY) {
+            this.running = false;
+            this.showEndStateOverlay(false); // Always loss state for death zone
+            return;
+        }
+
+        // Victory condition: all bricks destroyed
+        if (this.bricks.every(brick => brick.destroyed)) {
+            this.running = false;
+            this.showEndStateOverlay(true);
+            return;
+        }
+
+        // Loss condition: ball goes below paddle
+        if (this.ball.y - this.ball.radius > this.canvas.height) {
+            this.running = false;
+            this.showEndStateOverlay(false);
+            return;
+        }
+
+    }
+
+    showEndStateOverlay(victoryState) {
+        const overlay = document.getElementById('game-over-overlay');
+        const scoreElem = document.getElementById('final-score');
+        const titleElem = document.getElementById('end-state-title');
+        if (overlay && scoreElem && titleElem) {
+            if (victoryState) {
+                titleElem.textContent = "You Win! 🎉";
+                scoreElem.textContent = `Final Score: ${this.score}`;
+            } else {
+                titleElem.textContent = "Game Over!";
+                scoreElem.textContent = `Final Score: ${this.score}`;
+            }
+            overlay.style.display = 'flex';
+        }
+    }
+
+    reset() {
+        this.paddle = new Paddle(this.canvas);
+        this.ball = new Ball(this.canvas);
+        this.initBricks();
+        this.running = true;
+        this.score = 0;
+        hideGameOverOverlay();
     }
 
     draw() {
@@ -189,6 +273,33 @@ class Game {
     }
 }
 
+
+
+// Overlay helpers (not in a class)
+function hideGameOverOverlay() {
+    const overlay = document.getElementById('game-over-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function setupRestartButton(game) {
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) {
+        const restartFn = () => {
+            if (!game.running) {
+                hideGameOverOverlay();
+                game.reset();
+                gameLoop(); // Restart the game loop after reset
+            }
+        };
+        restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartFn(); }, {passive: false});
+        restartBtn.addEventListener('click', restartFn);
+        document.addEventListener('keydown', function(e) {
+            if (!game.running && e.code === 'Enter') {
+                restartFn();
+            }
+        });
+    }
+}
 
 function setupPaddleControls(game) {
     const keysDown = new Set();
@@ -249,9 +360,12 @@ const ctx = canvas.getContext('2d');
 const game = new Game(canvas, ctx);
 // After creating your game instance:
 setupPaddleControls(game);
+setupRestartButton(game);
 function gameLoop() {
     game.update();
     game.draw();
-    requestAnimationFrame(gameLoop);
+    if (game.running) {
+        requestAnimationFrame(gameLoop);
+    }
 }
 gameLoop();
