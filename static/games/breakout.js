@@ -62,14 +62,14 @@ class Ball {
             const p2 = this.trail[i + 1];
             const alpha = (i + 1) / this.trail.length;
             ctx.save();
-            ctx.strokeStyle = `rgba(173,216,230,${alpha * 0.7})`; // light blue, fading
+            ctx.strokeStyle = `rgba(1, 234, 254,${alpha * 0.7})`; // light blue, fading
             ctx.shadowColor = `rgba(0,255,255,${alpha})`;
-            ctx.shadowBlur = 10 * alpha;
+            ctx.shadowBlur = 8 * alpha;
             ctx.lineWidth = 2 + 2 * (1 - alpha);
             ctx.beginPath();
             // Add a little jaggedness for lightning effect
-            const midX = (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 6 * (1 - alpha);
-            const midY = (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 6 * (1 - alpha);
+            const midX = 5 + (p1.x + p2.x) / 2 + (Math.random() - 0.5) * 2 * (1 - alpha);
+            const midY = 5 + (p1.y + p2.y) / 2 + (Math.random() - 0.5) * 2 * (1 - alpha);
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(midX, midY);
             ctx.lineTo(p2.x, p2.y);

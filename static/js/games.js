@@ -3,7 +3,8 @@ export const games = [
     name: "Snake",
     emoji: "🐍",
     href: "/static/games/snake.html",
-    description: "Classic snake game"
+    description: "Classic snake game",
+    image: "images/snake-background2.webp"
   },
   {
     name: "Pong",
