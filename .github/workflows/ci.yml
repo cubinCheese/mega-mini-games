@@ -33,7 +33,7 @@ jobs:
           sleep 5
 
       - name: Run backend tests
-        run: pytest tests/test_api.py
+        run: PYTHONPATH=. pytest tests/test_api.py
 
       - name: Run Playwright tests
         run: pytest tests/test_snake_overlay.py
