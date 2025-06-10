@@ -166,6 +166,12 @@ class SnakeGame extends Game {
                 if (this.gameOver) {
                     this.overlay.hide();
                     this.reset();
+                    // Enable and show toggle appearance button after game over
+                    const toggleBtn = document.getElementById('toggle-appearance');
+                    if (toggleBtn) {
+                        toggleBtn.style.display = '';
+                        toggleBtn.disabled = false;
+                    }
                 }
             };
             restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartFn(); }, {passive: false});
@@ -176,8 +182,14 @@ class SnakeGame extends Game {
         const toggleBtn = document.getElementById('toggle-appearance');
         if (toggleBtn) {
             toggleBtn.addEventListener('click', this.handleToggleAppearance.bind(this));
-            toggleBtn.style.display = 'none'; // Hide by default
-            toggleBtn.disabled = true;        // Disable by default
+            // Only allow toggling when game is not running
+            if (!this.gameOver) {
+                toggleBtn.style.display = 'none'; // Hide by default during gameplay
+                toggleBtn.disabled = true;        // Disable by default during gameplay
+            } else {
+                toggleBtn.style.display = '';
+                toggleBtn.disabled = false;
+            }
         }
 
         this.draw();
@@ -187,12 +199,24 @@ class SnakeGame extends Game {
     // Main game loop
     gameLoop(time) {
         if (!this.gameOver) {
+            // Hide and disable toggle during gameplay
+            const toggleBtn = document.getElementById('toggle-appearance');
+            if (toggleBtn) {
+                toggleBtn.style.display = 'none';
+                toggleBtn.disabled = true;
+            }
             if (time - this.lastUpdateTime > this.moveInterval) {
                 this.update();
                 this.lastUpdateTime = time;
             }
             this.draw();
         } else {
+            // Show and enable toggle when game is over
+            const toggleBtn = document.getElementById('toggle-appearance');
+            if (toggleBtn) {
+                toggleBtn.style.display = '';
+                toggleBtn.disabled = false;
+            }
             this.draw(); // Still draw the last frame
         }
         requestAnimationFrame(this.gameLoop.bind(this));
