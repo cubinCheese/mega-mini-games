@@ -6,26 +6,41 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const box = 20; // Size of each box in the grid
 
-let lastUpdateTime = 0;
-const snakeSpeed = 10; // moves per second
-const moveInterval = 1000 / snakeSpeed;
-
-let snake = [{x: 160, y: 160}]; // Initial position of the snake
-let dx = box; // Initial direction (moving right)
-let dy = 0; // Initial vertical direction
-let nextDx = dx;
-let nextDy = dy;
-
-let food = {x: Math.floor(Math.random() * canvas.width / box) * box, y: Math.floor(Math.random() * canvas.height / box) * box}; // Initial food position
-let score = 0; // Initial score
-let gameOver = false; // Game over flag
-let useDuck = false; // false = lime blocks, true = duck emoji
-
-const totalCells = (canvas.width / box) * (canvas.height / box);
-let victoryState = false;
-
-
 class SnakeGame extends Game {
+    constructor(canvas, ctx, box) {
+        super(); // Call the parent Game constructor
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.box = box;
+
+        // Member variables
+        this.lastUpdateTime = 0;
+        this.snake = [{ x: 160, y: 160 }];
+        this.dx = this.box; // Initial direction (moving right)
+        this.dy = 0;        // Initial vertical direction
+        this.nextDx = this.dx;
+        this.nextDy = this.dy;
+        this.food = this.placeFood();
+        this.score = 0;
+        this.gameOver = false;
+        this.useDuck = false;
+        this.victoryState = false;
+    }
+
+    // Getters for former consts variables
+    get snakeSpeed() {
+        return 10; // moves per second
+    }
+
+    get moveInterval() {
+        return 1000 / this.snakeSpeed; // milliseconds per move
+    }
+
+    get totalCells() {
+        return (this.canvas.width / this.box) * (this.canvas.height / this.box);
+    }
+
+
     calculateScore(currentScore) {
     // Modified scoring system
         if (currentScore <= 10) {
