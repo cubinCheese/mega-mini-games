@@ -1,5 +1,9 @@
 // snake.js
-import Game from '../js/base-game.js'; // Import the base Game class
+import Game from '../js/global-classes/base-game.js';
+import InputManager from '../js/global-classes/input-manager.js';
+import OverlayManager from '../js/global-classes/overlay-manager.js';
+import Renderer from '../js/global-classes/renderer.js';
+
 
 // Constants and Variables 
 const canvas = document.getElementById('game');
@@ -12,19 +16,16 @@ class SnakeGame extends Game {
         this.canvas = canvas;
         this.ctx = ctx;
         this.box = box;
-
-        // Member variables
-        this.lastUpdateTime = 0;
         this.snake = [{ x: 160, y: 160 }];
-        this.dx = this.box; // Initial direction (moving right)
+        this.dx = box; // Initial direction (moving right)
         this.dy = 0;        // Initial vertical direction
         this.nextDx = this.dx;
         this.nextDy = this.dy;
         this.food = this.placeFood();
-        this.score = 0;
-        this.gameOver = false;
         this.useDuck = false;
-        this.victoryState = false;
+        this.input = new InputManager();
+        this.overlay = new OverlayManager('game-over-overlay', 'end-state-title', 'final-score');
+        this.lastUpdateTime = 0;
     }
 
     // Getters for former consts variables
@@ -45,247 +46,174 @@ class SnakeGame extends Game {
     // Modified scoring system
         if (currentScore <= 10) {
         currentScore += 10;
-        } else if (currentScore >= 50) {
-        currentScore += 50;
         } else if (currentScore >= 100) {
         currentScore += 100;
+        } else if (currentScore >= 50) {
+        currentScore += 50;
         } else {
         currentScore += 10; // Default score increment
         }
         return currentScore;
     }
-}
 
-// Instantiate ONCE, outside of update()
-const snakeGameInstance = new SnakeGame();
-
-
-
-// Update game state: snake movement, collision, food logic
-function update() {
-    // Update direction to the next direction
-    dx = nextDx; 
-    dy = nextDy; 
-
-    // Move snake, check collisions, handle food eating
-    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-    snake.unshift(head);
-
-    // Check if snake eats food
-    if (head.x === food.x && head.y === food.y) {
-          food = placeFood(); // Place new food
-          score += snakeGameInstance.calculateScore(score); // Update score
-      } else {
-      snake.pop(); // Remove the tail if not eating food
-    }
-    
-    // victory condition: event trigger
-    if (snake.length >= totalCells) {
-        gameOver = true;
-        showEndStateOverlay(true);
-        return;
+    // Place food at a random position
+    placeFood() {
+        let newFood;
+        do {
+            newFood = {
+                x: Math.floor(Math.random() * this.canvas.width / this.box) * this.box,
+                y: Math.floor(Math.random() * this.canvas.height / this.box) * this.box
+            };
+        } while (this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+        return newFood;
     }
 
-    // Check for collisions with walls or self
-    if (head.x < 0 || head.x >= canvas.width || 
-        head.y < 0 || head.y >= canvas.height || 
-        snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
-    ) {
-        gameOver = true;
-        showEndStateOverlay(false);
-        return;
-    } 
-}
+    // Update game state: snake movement, collision, food logic
+    update() {
+        // Update direction to the next direction
+        this.dx = this.nextDx;
+        this.dy = this.nextDy;
 
-// Show overlay and toggle button after game over
-function showEndStateOverlay(victoryState) {
-    const overlay = document.getElementById('game-over-overlay');
-    const scoreElem = document.getElementById('final-score');
-    const toggleBtn = document.getElementById('toggle-appearance');
-    const titleElem = document.getElementById('end-state-title'); // Use the id directly
+        // Move snake, check collisions, handle food eating
+        const head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
+        this.snake.unshift(head);
 
-    if (overlay && scoreElem && titleElem) {
-        if (victoryState) {
-          titleElem.textContent = "You Win! 🎉";
-          scoreElem.textContent = `Final Score: ${score}`;
-          playConfetti();    // Trigger confetti!
+        // Check if snake eats food
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.food = this.placeFood(); // Place new food
+            this.score += this.calculateScore(this.score); // Use class method for scoring
         } else {
-          titleElem.textContent = "Game Over!";
-          scoreElem.textContent = `Final Score: ${score}`;
+            this.snake.pop(); // Remove the tail if not eating food
         }
-        overlay.style.display = 'flex';
-    } 
 
-    if (toggleBtn) {
-        toggleBtn.style.display = 'inline-block';
-        toggleBtn.textContent = useDuck ? "Use 🟩" : "Use 🐤";
-        toggleBtn.disabled = false;
+        // victory condition: event trigger
+        if (this.snake.length >= this.totalCells) {
+            this.gameOver = true;
+            this.overlay.show(true, this.score);
+            return;
+        }
+
+        // Check for collisions with walls or self
+        if (
+            head.x < 0 || head.x >= this.canvas.width ||
+            head.y < 0 || head.y >= this.canvas.height ||
+            this.snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+        ) {
+            this.gameOver = true;
+            this.overlay.show(false, this.score);
+            return;
+        }
     }
-}
 
-// Hide overlay and toggle button when restarting
-function hideGameOverOverlay() {
-    const overlay = document.getElementById('game-over-overlay');   // game over overlay
-    const toggleBtn = document.getElementById('toggle-appearance'); // 🟩 or 🐤
-    if (overlay) overlay.style.display = 'none';
-    if (toggleBtn) toggleBtn.style.display = 'none';
-}
-
-// Plays confetti animation
-function playConfetti() {
-    if (window.confetti) {
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
+    handleInput(event) {
+        if (this.gameOver && event.code === 'Enter') {
+            this.overlay.hide();
+            this.reset();
+            return;
+        }
+        if (this.gameOver) return;
+        if (event.key === 'w' && this.dy === 0) { this.nextDx = 0; this.nextDy = -this.box; }
+        else if (event.key === 's' && this.dy === 0) { this.nextDx = 0; this.nextDy = this.box; }
+        else if (event.key === 'a' && this.dx === 0) { this.nextDx = -this.box; this.nextDy = 0; }
+        else if (event.key === 'd' && this.dx === 0) { this.nextDx = this.box; this.nextDy = 0; }
     }
-}
 
-// Place food at a random position
-function placeFood() {
-    let newFood;
-    do {
-        newFood = {
-            x: Math.floor(Math.random() * canvas.width / box) * box,
-            y: Math.floor(Math.random() * canvas.height / box) * box
-        };
-    } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
-    return newFood;
-}
-
-// Toggle appearance of snake handler
-function handleToggleAppearance() {
-    useDuck = !useDuck; // Toggle between duck and lime
-    const toggleBtn = document.getElementById('toggle-appearance');
-    if (toggleBtn) {
-        toggleBtn.textContent = useDuck ? "Use 🟩" : "Use 🐤";
+    setupControls() {
+        this.input.addKeyListener(this.handleInput.bind(this));
+        this.input.addButtonListener('btn-up', () => { if (this.dy === 0) { this.nextDx = 0; this.nextDy = -this.box; } });
+        this.input.addButtonListener('btn-down', () => { if (this.dy === 0) { this.nextDx = 0; this.nextDy = this.box; } });
+        this.input.addButtonListener('btn-left', () => { if (this.dx === 0) { this.nextDx = -this.box; this.nextDy = 0; } });
+        this.input.addButtonListener('btn-right', () => { if (this.dx === 0) { this.nextDx = this.box; this.nextDy = 0; } });
     }
-    draw(); // Redraw the game with the new appearance
-}
 
-// Draw everything on the canvas
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (useDuck) {
-        // draw snake as duck emoji
-        ctx.font = `${box + 2}px serif`;
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        snake.forEach(segment => ctx.fillText('🐤', segment.x, segment.y));
-
-        // draw food as duck egg
-        ctx.fillText('🐣', food.x, food.y);
-
-      } else {
-        // draw snake as lime square
-        ctx.fillStyle = 'lime';
-        snake.forEach(segment => ctx.fillRect(segment.x, segment.y, box - 2, box - 2));
-        
-        // draw food as red square
-        ctx.fillStyle = 'red';
-        ctx.fillRect(food.x, food.y, box - 2, box - 2);
+    // Toggle appearance of snake handler
+    handleToggleAppearance() {
+        this.useDuck = !this.useDuck; // Toggle between duck and lime
+        const toggleBtn = document.getElementById('toggle-appearance');
+        if (toggleBtn) {
+            toggleBtn.textContent = this.useDuck ? "Use 🟩" : "Use 🐤";
+        }
+        this.draw(); // Redraw the game with the new appearance
     }
-}
 
-// Movement keys handling
-function handleKeyDown(event) {
-    if (gameOver && event.code === 'Enter') {
-        hideGameOverOverlay();
-        resetGame();
-        return;
+    // Draw everything on the canvas
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.useDuck) {
+            this.ctx.font = `${this.box + 2}px serif`;
+            this.ctx.textAlign = "left";
+            this.ctx.textBaseline = "top";
+            this.snake.forEach(segment => this.ctx.fillText('🐤', segment.x, segment.y));
+            this.ctx.fillText('🐣', this.food.x, this.food.y);
+        } else {
+            this.ctx.fillStyle = 'lime';
+            this.snake.forEach(segment => this.ctx.fillRect(segment.x, segment.y, this.box - 2, this.box - 2));
+            this.ctx.fillStyle = 'red';
+            this.ctx.fillRect(this.food.x, this.food.y, this.box - 2, this.box - 2);
+        }
     }
-    if (gameOver) return; // Ignore other keys if game is over
 
-    // TODO: Change snake direction based on key pressed
-    // In handleKeyDown and addControl:
-    if (event.key === 'w' && dy === 0) {
-        nextDx = 0; nextDy = -box;
-    } else if (event.key === 's' && dy === 0) {
-        nextDx = 0; nextDy = box;
-    } else if (event.key === 'a' && dx === 0) {
-        nextDx = -box; nextDy = 0;
-    } else if (event.key === 'd' && dx === 0) {
-        nextDx = box; nextDy = 0;
+    // Initalize game
+    init() {
+        this.lastUpdateTime = 0;
+        this.setupControls(); 
+
+        // Add restart button handler for overlay
+        const restartBtn = document.getElementById('btn-restart');
+        if (restartBtn) {
+            const restartFn = () => {
+                if (this.gameOver) {
+                    this.overlay.hide();
+                    this.reset();
+                }
+            };
+            restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartFn(); }, {passive: false});
+            restartBtn.addEventListener('click', restartFn);
+        }
+
+        // toggle snake appearance
+        const toggleBtn = document.getElementById('toggle-appearance');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', this.handleToggleAppearance.bind(this));
+            toggleBtn.style.display = 'none'; // Hide by default
+            toggleBtn.disabled = true;        // Disable by default
+        }
+
+        this.draw();
+        requestAnimationFrame(this.gameLoop.bind(this));
     }
-}
 
-// Touch/Click Controls
-function setupHardcodedControlButtons() {
-    const up    = document.getElementById('btn-up');
-    const down  = document.getElementById('btn-down');
-    const left  = document.getElementById('btn-left');
-    const right = document.getElementById('btn-right');
-    const addControl = (el, fn) => {
-        if (!el) return;
-        el.addEventListener('touchstart', function(e) { e.preventDefault(); fn(); }, {passive: false});
-        el.addEventListener('click', fn);
-    };
-    addControl(up,    () => { if (dy === 0) { nextDx = 0; nextDy = -box; } });
-    addControl(down,  () => { if (dy === 0) { nextDx = 0; nextDy = box; } });
-    addControl(left,  () => { if (dx === 0) { nextDx = -box; nextDy = 0; } });
-    addControl(right, () => { if (dx === 0) { nextDx = box; nextDy = 0; } });
-}
-
-
-// Initalize game
-function init() {
-    document.addEventListener('keydown', handleKeyDown);
-    setupHardcodedControlButtons(); 
-
-    // Add restart button handler for overlay
-    const restartBtn = document.getElementById('btn-restart');
-    if (restartBtn) {
-        const restartFn = () => {
-            if (gameOver) {
-                hideGameOverOverlay();
-                resetGame();
+    // Main game loop
+    gameLoop(time) {
+        if (!this.gameOver) {
+            if (time - this.lastUpdateTime > this.moveInterval) {
+                this.update();
+                this.lastUpdateTime = time;
             }
-        };
-        restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartFn(); }, {passive: false});
-        restartBtn.addEventListener('click', restartFn);
-    }
-
-    // toggle snake appearance
-    const toggleBtn = document.getElementById('toggle-appearance');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', handleToggleAppearance);
-        toggleBtn.style.display = 'none'; // Hide by default
-        toggleBtn.disabled = true;        // Disable by default
-    }
-
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-// Main game loop
-function gameLoop(time) {
-    if (!gameOver) {
-        if (time - lastUpdateTime > moveInterval) {
-            update();
-            lastUpdateTime = time;
+            this.draw();
+        } else {
+            this.draw(); // Still draw the last frame
         }
-        draw();
-    } else {
-        draw(); // Still draw the last frame
+        requestAnimationFrame(this.gameLoop.bind(this));
     }
-    requestAnimationFrame(gameLoop);
+
+    // Optional: reset game state after game over
+    reset() {
+        // TODO: Reset snake position and direction
+        this.gameOver = false;
+        this.score = 0; // Reset score
+        this.food = this.placeFood(); // Place new food
+        this.snake = [{x: 160, y: 160}]; // Reset snake position
+        this.dx = this.box; // Reset direction to right
+        this.dy = 0; // Reset vertical direction
+        this.nextDx = this.dx; 
+        this.nextDy = this.dy;
+    }
 }
 
-// Optional: reset game state after game over
-function resetGame() {
-    // TODO: Reset snake position and direction
-    gameOver = false;
-    score = 0; // Reset score
-    food = placeFood(); // Place new food
-    snake = [{x: 160, y: 160}]; // Reset snake position
-    dx = box; // Reset direction to right
-    dy = 0; // Reset vertical direction
-    nextDx = dx; 
-    nextDy = dy;
-}
-
+// Usage:
+// Then use snakeGame.update(), snakeGame.draw(), etc. in your game loop.
 
 // test functions
 function testVictoryState() {
@@ -302,4 +230,6 @@ function testVictoryState() {
 // testVictoryState();
 
 // Start the game
-init();
+
+const snakeGame = new SnakeGame(canvas, ctx, box);
+snakeGame.init();
