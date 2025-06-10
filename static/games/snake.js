@@ -1,4 +1,5 @@
 // snake.js
+import Game from '../js/base-game.js'; // Import the base Game class
 
 // Constants and Variables 
 const canvas = document.getElementById('game');
@@ -24,20 +25,26 @@ const totalCells = (canvas.width / box) * (canvas.height / box);
 let victoryState = false;
 
 
-
-function calculateScore(currentScore) {
-  // Modified scoring system
-    if (currentScore <= 10) {
-      currentScore += 10;
-    } else if (currentScore >= 50) {
-      currentScore += 50;
-    } else if (currentScore >= 100) {
-      currentScore += 100;
-    } else {
-      currentScore += 10; // Default score increment
+class SnakeGame extends Game {
+    calculateScore(currentScore) {
+    // Modified scoring system
+        if (currentScore <= 10) {
+        currentScore += 10;
+        } else if (currentScore >= 50) {
+        currentScore += 50;
+        } else if (currentScore >= 100) {
+        currentScore += 100;
+        } else {
+        currentScore += 10; // Default score increment
+        }
+        return currentScore;
     }
-    return currentScore;
 }
+
+// Instantiate ONCE, outside of update()
+const snakeGameInstance = new SnakeGame();
+
+
 
 // Update game state: snake movement, collision, food logic
 function update() {
@@ -52,7 +59,7 @@ function update() {
     // Check if snake eats food
     if (head.x === food.x && head.y === food.y) {
           food = placeFood(); // Place new food
-          score += calculateScore(score); // Update score
+          score += snakeGameInstance.calculateScore(score); // Update score
       } else {
       snake.pop(); // Remove the tail if not eating food
     }
