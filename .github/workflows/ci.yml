@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ breakout-game ]
+    branches: [ main ]
   pull_request:
-    branches: [ breakout-game ]
+    branches: [ main ]
 
 jobs:
   test:
