@@ -295,12 +295,6 @@ function testMyLoseState() {
     snakeGame.input.handleInput({ code: 'KeyW' }); // Move up
 };
 
-// // Expose the game instance for testing purposes
-// window.snakeGame = snakeGame;
-// // Expose test functions for testing purposes
+// expose test functions to global scope for testing
 window.testMyVictoryState = testMyVictoryState;
 window.testMyLoseState = testMyLoseState;
-// window.testLoseState = function() {
-//     snakeGame.gameOver = true;
-//     snakeGame.overlay.show(false, snakeGame.score);
-// };

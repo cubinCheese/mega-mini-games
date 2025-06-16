@@ -17,3 +17,5 @@ def test_snake_lose_overlay(page):
     page.wait_for_selector("#game-over-overlay", state="visible")
     title = page.inner_text("#end-state-title")
     assert "Game Over" in title
+
+    
