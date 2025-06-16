@@ -268,17 +268,7 @@ class SnakeGame extends Game {
 // Usage:
 // Then use snakeGame.update(), snakeGame.draw(), etc. in your game loop.
 
-// test functions
-function testVictoryState() {
-  useDuck = true;
-  snake = [];
-  score = totalCells + 1;
-  for (let y = 0; y < canvas.height; y += box) {
-      for (let x = 0; x < canvas.width; x += box) {
-          snake.push({ x, y });
-      }
-  }
-};
+
 
 // testVictoryState();
 
@@ -286,3 +276,31 @@ function testVictoryState() {
 
 const snakeGame = new SnakeGame(canvas, ctx, box);
 snakeGame.init();
+
+// test functions
+function testMyVictoryState() {
+  snakeGame.useDuck = true;
+  snakeGame.snake = [];
+  snakeGame.score = snakeGame.totalCells + 1;
+  for (let y = 0; y < canvas.height; y += box) {
+      for (let x = 0; x < canvas.width; x += box) {
+          snakeGame.snake.push({ x, y });
+      }
+  }
+};
+
+function testMyLoseState() {
+    // simply let snake run itself into wall
+    // inputManager is "input" under SnakeGame class
+    snakeGame.input.handleInput({ code: 'KeyW' }); // Move up
+};
+
+// // Expose the game instance for testing purposes
+// window.snakeGame = snakeGame;
+// // Expose test functions for testing purposes
+window.testMyVictoryState = testMyVictoryState;
+window.testMyLoseState = testMyLoseState;
+// window.testLoseState = function() {
+//     snakeGame.gameOver = true;
+//     snakeGame.overlay.show(false, snakeGame.score);
+// };
